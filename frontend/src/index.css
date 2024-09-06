@@ -1,0 +1,9 @@
+/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* You can add any global styles here */
+body {
+  @apply antialiased text-neutral-900 dark:text-white;
+}
