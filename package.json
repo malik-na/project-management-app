@@ -1,18 +1,26 @@
 {
   "name": "project-management-app",
   "version": "1.0.0",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "concurrently \"npm run server\" \"npm run frontend\"",
+    "server": "cd server && npm start",
+    "frontend": "cd frontend && npm run dev",
+    "install-all": "npm install && cd frontend && npm install && cd ../server && npm install",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "cd frontend && npm test",
+    "test:backend": "cd server && npm test"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/mocha": "^10.0.7",
+    "@types/morgan": "^1.9.9",
+    "@types/supertest": "^6.0.2",
+    "concurrently": "^6.2.0"
+  },
   "dependencies": {
-    "axios": "^1.7.7",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "@testing-library/react": "^16.0.1",
+    "morgan": "^1.10.0",
+    "supertest": "^7.0.0",
+    "vitest": "^2.0.5"
   }
 }

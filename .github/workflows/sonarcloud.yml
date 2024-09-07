@@ -2,47 +2,48 @@ name: SonarCloud analysis
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
-
-permissions:
-  pull-requests: read
-  contents: read
 
 jobs:
   Analysis:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm run install-all
 
-      - name: Run tests with coverage
-        run: npm run test -- --coverage
+      - name: Run frontend tests
+        working-directory: ./frontend
+        run: npm run coverage
+
+      - name: Run backend tests
+        working-directory: ./server
+        run: npm run test:coverage
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
             -Dsonar.projectKey=malik-na_project-management-app
             -Dsonar.organization=malik-na
-            -Dsonar.sources=src
-            -Dsonar.tests=src
-            -Dsonar.test.inclusions=**/*.test.js,**/*.test.jsx,**/*.test.ts,**/*.test.tsx
-            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.typescript.tsconfigPath=tsconfig.json
-            -Dsonar.coverage.exclusions=**/*.test.js,**/*.test.jsx,**/*.test.ts,**/*.test.tsx,src/index.tsx,src/reportWebVitals.ts
+            -Dsonar.sources=frontend/src,server/src
+            -Dsonar.tests=frontend/src,server/src
+            -Dsonar.test.inclusions=**/*.test.ts,**/*.test.tsx
+            -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info,server/coverage/lcov.info
+            -Dsonar.typescript.tsconfigPath=frontend/tsconfig.json,server/tsconfig.json
+            -Dsonar.coverage.exclusions=**/*.test.ts,**/*.test.tsx,**/index.ts,**/vite-env.d.ts
