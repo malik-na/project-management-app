@@ -1,45 +1,45 @@
 // server/index.js
-const express = require("express");
-const axios = require("axios");
-const cors = require("cors");
 require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const rateLimit = require("express-rate-limit");
+const { errorHandler } = require("./src/middleware/errorHandler");
+const logger = require("./src/utils/logger");
+const authRoutes = require("./src/routes/auth");
+const githubRoutes = require("./src/routes/github");
 
 const app = express();
-const PORT = process.env.VITE_SERVER_PORT || 3001;
+const PORT = process.env.PORT || 3001;
 
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+});
+
+app.use(limiter);
 app.use(cors());
 app.use(express.json());
 
-app.post("/api/github/oauth", async (req, res) => {
-  const { code } = req.body;
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => logger.info("Connected to MongoDB"))
+  .catch((err) => logger.error("MongoDB connection error:", err));
 
-  try {
-    const response = await axios.post(
-      "https://github.com/login/oauth/access_token",
-      {
-        client_id: process.env.VITE_GITHUB_CLIENT_ID,
-        client_secret: process.env.VITE_GITHUB_CLIENT_SECRET,
-        code,
-      },
-      {
-        headers: {
-          Accept: "application/json",
-        },
-      }
-    );
+app.use("/api/auth", authRoutes);
+app.use("/api/github", githubRoutes);
 
-    console.log("GitHub token response:", response.data);
-
-    res.json(response.data);
-  } catch (error) {
-    console.error(
-      "Error exchanging code for token:",
-      error.response?.data || error.message
-    );
-    res.status(500).json({ error: "Failed to exchange code for token" });
-  }
-});
+// Error handling middleware
+app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  logger.info(`Server running on http://localhost:${PORT}`);
+});
+
+// Handle unhandled promise rejections
+process.on("unhandledRejection", (err) => {
+  logger.error("UNHANDLED REJECTION! 💥 Shutting down...");
+  logger.error(err.name, err.message);
+  process.exit(1);
 });
