@@ -24,11 +24,11 @@ jobs:
       - name: Install dependencies
         run: npm run install-all
 
-      - name: Run frontend tests
+      - name: Run frontend tests with coverage
         working-directory: ./frontend
         run: npm run coverage
 
-      - name: Run backend tests
+      - name: Run backend tests with coverage
         working-directory: ./server
         run: npm run test:coverage
 
